@@ -1,6 +1,24 @@
 /* =========================================================
    CLIENT IMAGE GALLERY
-   Image loading + metadata + file size + selection + Formspree
+   gallery.js
+
+   Loads:
+   - images.json
+   - vimeo.json
+
+   Features:
+   - Single-column image gallery
+   - Image selection
+   - Image notes
+   - Typing a note automatically selects image
+   - File name
+   - Dimensions
+   - Aspect ratio
+   - File size
+   - Vimeo thumbnail previews
+   - Clicking Vimeo preview opens review link
+   - Formspree submission
+   - Mobile footer
 ========================================================= */
 
 
@@ -8,9 +26,20 @@
    ELEMENTS
 ========================================================= */
 
-const gallery = document.getElementById("gallery");
-const selectionCount = document.getElementById("selectionCount");
-const mobileSelectionCount = document.getElementById("mobileSelectionCount");
+const gallery =
+  document.getElementById("gallery");
+
+const vimeoSection =
+  document.getElementById("vimeoSection");
+
+const vimeoGrid =
+  document.getElementById("vimeoGrid");
+
+const selectionCount =
+  document.getElementById("selectionCount");
+
+const mobileSelectionCount =
+  document.getElementById("mobileSelectionCount");
 
 const selectedImagesInput =
   document.getElementById("selectedImages");
@@ -37,7 +66,9 @@ const selectionFooter =
   document.getElementById("selectionFooter");
 
 const submissionConfirmation =
-  document.getElementById("submissionConfirmation");
+  document.getElementById(
+    "submissionConfirmation"
+  );
 
 
 /* =========================================================
@@ -45,6 +76,7 @@ const submissionConfirmation =
 ========================================================= */
 
 let allImages = [];
+
 let selectedItems = [];
 
 
@@ -67,37 +99,145 @@ function naturalSort(a, b) {
 
 
 /* =========================================================
-   ASPECT RATIO
+   FORMAT FILE SIZE
 ========================================================= */
 
-function getAspectRatio(width, height) {
+function formatFileSize(bytes) {
 
-  if (!width || !height) {
+  if (
+    !bytes ||
+    isNaN(bytes)
+  ) {
     return "";
   }
 
-  function gcd(a, b) {
+  const units = [
+    "B",
+    "KB",
+    "MB",
+    "GB"
+  ];
 
-    while (b !== 0) {
+  let size = bytes;
 
-      const temp = b;
+  let unitIndex = 0;
 
-      b = a % b;
+  while (
+    size >= 1024 &&
+    unitIndex <
+      units.length - 1
+  ) {
 
-      a = temp;
+    size /= 1024;
 
-    }
-
-    return a;
+    unitIndex++;
 
   }
 
+  return `${size.toFixed(
+    unitIndex === 0 ? 0 : 1
+  )} ${units[unitIndex]}`;
 
-  const divisor =
-    gcd(width, height);
+}
 
 
-  return `${width / divisor}:${height / divisor}`;
+/* =========================================================
+   GCD
+========================================================= */
+
+function getGCD(a, b) {
+
+  while (b !== 0) {
+
+    const temp = b;
+
+    b = a % b;
+
+    a = temp;
+
+  }
+
+  return a;
+
+}
+
+
+/* =========================================================
+   ASPECT RATIO
+========================================================= */
+
+function formatAspectRatio(
+  width,
+  height
+) {
+
+  if (
+    !width ||
+    !height
+  ) {
+    return "";
+  }
+
+  const gcd =
+    getGCD(
+      width,
+      height
+    );
+
+  return `${width / gcd}:${height / gcd}`;
+
+}
+
+
+/* =========================================================
+   IMAGE METADATA
+========================================================= */
+
+function getImageMetadata(
+  filename
+) {
+
+  return new Promise(
+    resolve => {
+
+      const image =
+        new Image();
+
+      image.onload =
+        function () {
+
+          resolve({
+
+            width:
+              image.naturalWidth,
+
+            height:
+              image.naturalHeight
+
+          });
+
+        };
+
+      image.onerror =
+        function () {
+
+          resolve({
+
+            width: null,
+
+            height: null
+
+          });
+
+        };
+
+      image.src =
+        `images/${encodeURIComponent(
+          filename
+        )}`;
+
+    }
+  );
 
 }
 
@@ -106,43 +246,53 @@ function getAspectRatio(width, height) {
    FILE SIZE
 ========================================================= */
 
-function formatFileSize(bytes) {
+async function getFileSize(
+  filename
+) {
 
-  if (!Number.isFinite(bytes)) {
-    return "";
+  try {
+
+    const response =
+      await fetch(
+        `images/${encodeURIComponent(
+          filename
+        )}`,
+        {
+          method:
+            "HEAD",
+
+          cache:
+            "no-cache"
+        }
+      );
+
+    const length =
+      response.headers.get(
+        "content-length"
+      );
+
+    if (length) {
+
+      return Number(length);
+
+    }
+
+  } catch (error) {
+
+    console.warn(
+      "Could not determine file size:",
+      filename
+    );
+
   }
 
-
-  if (bytes < 1024) {
-    return `${bytes} B`;
-  }
-
-
-  if (bytes < 1024 * 1024) {
-
-    return `${(bytes / 1024).toFixed(1)} KB`;
-
-  }
-
-
-  return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+  return null;
 
 }
 
 
 /* =========================================================
-   IMAGE PATH
-========================================================= */
-
-function getImagePath(filename) {
-
-  return "images/" + encodeURI(filename);
-
-}
-
-
-/* =========================================================
-   LOAD GALLERY DATA
+   LOAD GALLERY
 ========================================================= */
 
 async function loadGallery() {
@@ -153,7 +303,8 @@ async function loadGallery() {
       await fetch(
         "images.json",
         {
-          cache: "no-cache"
+          cache:
+            "no-cache"
         }
       );
 
@@ -161,7 +312,7 @@ async function loadGallery() {
     if (!response.ok) {
 
       throw new Error(
-        `gallery-data.json returned ${response.status}`
+        "Could not load images.json"
       );
 
     }
@@ -174,7 +325,7 @@ async function loadGallery() {
     if (!Array.isArray(data)) {
 
       throw new Error(
-        "gallery-data.json must contain an array."
+        "images.json is not an array."
       );
 
     }
@@ -183,19 +334,12 @@ async function loadGallery() {
     allImages =
       data.filter(
         item =>
-          typeof item === "string" &&
-          item.trim() !== ""
+          typeof item === "string"
       );
 
 
     allImages.sort(
       naturalSort
-    );
-
-
-    console.log(
-      "Gallery images:",
-      allImages
     );
 
 
@@ -206,11 +350,7 @@ async function loadGallery() {
 
   } catch (error) {
 
-    console.error(
-      "Gallery loading error:",
-      error
-    );
-
+    console.error(error);
 
     gallery.innerHTML = `
       <div class="gallery-error">
@@ -232,7 +372,9 @@ function buildGallery() {
   gallery.innerHTML = "";
 
 
-  if (allImages.length === 0) {
+  if (
+    allImages.length === 0
+  ) {
 
     gallery.innerHTML = `
       <div class="gallery-empty">
@@ -248,10 +390,9 @@ function buildGallery() {
   allImages.forEach(
     (filename, index) => {
 
-
-      /* ===================================================
-         ARTICLE
-      =================================================== */
+      /* ---------------------------------------------------
+         ITEM
+      --------------------------------------------------- */
 
       const item =
         document.createElement(
@@ -265,9 +406,9 @@ function buildGallery() {
         filename;
 
 
-      /* ===================================================
-         BUTTON
-      =================================================== */
+      /* ---------------------------------------------------
+         IMAGE BUTTON
+      --------------------------------------------------- */
 
       const button =
         document.createElement(
@@ -291,34 +432,25 @@ function buildGallery() {
       );
 
 
-      /* ===================================================
+      /* ---------------------------------------------------
          IMAGE
-      =================================================== */
+      --------------------------------------------------- */
 
       const image =
         document.createElement(
           "img"
         );
 
-
-      const imagePath =
-        getImagePath(filename);
-
-
-      console.log(
-        "Loading:",
-        imagePath
-      );
-
-
       image.src =
-        imagePath;
+        `images/${encodeURIComponent(
+          filename
+        )}`;
 
       image.alt =
         filename;
 
       image.loading =
-        index < 6
+        index < 4
           ? "eager"
           : "lazy";
 
@@ -326,142 +458,9 @@ function buildGallery() {
         "async";
 
 
-      /* ===================================================
-         IMAGE INFORMATION
-      =================================================== */
-
-      const info =
-        document.createElement(
-          "div"
-        );
-
-      info.className =
-        "media-info";
-
-      info.textContent =
-        filename;
-
-
-      /* ===================================================
-         IMAGE LOAD
-      =================================================== */
-
-      image.addEventListener(
-        "load",
-        async () => {
-
-          const width =
-            image.naturalWidth;
-
-          const height =
-            image.naturalHeight;
-
-          const ratio =
-            getAspectRatio(
-              width,
-              height
-            );
-
-
-          let fileSize =
-            "";
-
-
-          /*
-            Get the actual file size from the server.
-          */
-
-          try {
-
-            const response =
-              await fetch(
-                imagePath,
-                {
-                  method: "HEAD",
-                  cache: "no-cache"
-                }
-              );
-
-
-            if (response.ok) {
-
-              const contentLength =
-                response.headers.get(
-                  "content-length"
-                );
-
-
-              if (contentLength) {
-
-                fileSize =
-                  formatFileSize(
-                    Number(contentLength)
-                  );
-
-              }
-
-            }
-
-          } catch (error) {
-
-            console.warn(
-              "Could not determine file size:",
-              filename
-            );
-
-          }
-
-
-          const metadata = [
-            filename,
-            `${width} × ${height}`,
-            ratio,
-            fileSize
-          ].filter(Boolean);
-
-
-          info.textContent =
-            metadata.join(" · ");
-
-
-          console.log(
-            `Loaded: ${filename} — ${width} × ${height} — ${ratio} — ${fileSize}`
-          );
-
-        }
-      );
-
-
-      /* ===================================================
-         IMAGE ERROR
-      =================================================== */
-
-      image.addEventListener(
-        "error",
-        () => {
-
-          console.error(
-            "IMAGE FAILED:",
-            filename,
-            imagePath
-          );
-
-
-          info.textContent =
-            `${filename} · IMAGE NOT FOUND`;
-
-
-          item.classList.add(
-            "image-error"
-          );
-
-        }
-      );
-
-
-      /* ===================================================
+      /* ---------------------------------------------------
          SELECTION INDICATOR
-      =================================================== */
+      --------------------------------------------------- */
 
       const indicator =
         document.createElement(
@@ -477,9 +476,143 @@ function buildGallery() {
       );
 
 
-      /* ===================================================
+      /* ---------------------------------------------------
+         IMAGE INFORMATION
+      --------------------------------------------------- */
+
+      const info =
+        document.createElement(
+          "div"
+        );
+
+      info.className =
+        "media-info";
+
+
+      const filenameElement =
+        document.createElement(
+          "div"
+        );
+
+      filenameElement.className =
+        "media-filename";
+
+      filenameElement.textContent =
+        filename;
+
+
+      const technicalInfo =
+        document.createElement(
+          "div"
+        );
+
+      technicalInfo.className =
+        "media-technical-info";
+
+      technicalInfo.textContent =
+        "LOADING INFO…";
+
+
+      info.appendChild(
+        filenameElement
+      );
+
+      info.appendChild(
+        technicalInfo
+      );
+
+
+      /* ---------------------------------------------------
+         IMAGE NOTE
+      --------------------------------------------------- */
+
+      const note =
+        document.createElement(
+          "div"
+        );
+
+      note.className =
+        "image-note";
+
+
+      const noteLabel =
+        document.createElement(
+          "label"
+        );
+
+      noteLabel.textContent =
+        "NOTE";
+
+
+      const noteInput =
+        document.createElement(
+          "textarea"
+        );
+
+      noteInput.className =
+        "image-note-input";
+
+      noteInput.placeholder =
+        "Add a note about this image…";
+
+      noteInput.rows =
+        2;
+
+      noteInput.setAttribute(
+        "aria-label",
+        `Note for ${filename}`
+      );
+
+
+      /* ---------------------------------------------------
+         NOTE AUTOMATICALLY SELECTS IMAGE
+      --------------------------------------------------- */
+
+      noteInput.addEventListener(
+        "input",
+        () => {
+
+          if (
+            noteInput.value.trim() !== ""
+          ) {
+
+            if (
+              !item.classList.contains(
+                "selected"
+              )
+            ) {
+
+              item.classList.add(
+                "selected"
+              );
+
+              button.setAttribute(
+                "aria-pressed",
+                "true"
+              );
+
+            }
+
+          }
+
+          updateSelection();
+
+        }
+      );
+
+
+      note.appendChild(
+        noteLabel
+      );
+
+      note.appendChild(
+        noteInput
+      );
+
+
+      /* ---------------------------------------------------
          ASSEMBLE BUTTON
-      =================================================== */
+      --------------------------------------------------- */
 
       button.appendChild(
         image
@@ -490,9 +623,9 @@ function buildGallery() {
       );
 
 
-      /* ===================================================
-         SELECTION
-      =================================================== */
+      /* ---------------------------------------------------
+         IMAGE SELECTION
+      --------------------------------------------------- */
 
       button.addEventListener(
         "click",
@@ -518,9 +651,9 @@ function buildGallery() {
       );
 
 
-      /* ===================================================
+      /* ---------------------------------------------------
          ASSEMBLE ITEM
-      =================================================== */
+      --------------------------------------------------- */
 
       item.appendChild(
         button
@@ -530,9 +663,81 @@ function buildGallery() {
         info
       );
 
+      item.appendChild(
+        note
+      );
 
       gallery.appendChild(
         item
+      );
+
+
+      /* ---------------------------------------------------
+         LOAD METADATA
+      --------------------------------------------------- */
+
+      Promise.all([
+        getImageMetadata(filename),
+        getFileSize(filename)
+      ]).then(
+        ([metadata, fileSize]) => {
+
+          const dimensions =
+            metadata.width &&
+            metadata.height
+              ? `${metadata.width} × ${metadata.height}px`
+              : "SIZE UNKNOWN";
+
+
+          const ratio =
+            formatAspectRatio(
+              metadata.width,
+              metadata.height
+            );
+
+
+          const formattedSize =
+            formatFileSize(
+              fileSize
+            );
+
+
+          const parts = [];
+
+
+          if (dimensions) {
+
+            parts.push(
+              dimensions
+            );
+
+          }
+
+
+          if (ratio) {
+
+            parts.push(
+              ratio
+            );
+
+          }
+
+
+          if (formattedSize) {
+
+            parts.push(
+              formattedSize
+            );
+
+          }
+
+
+          technicalInfo.textContent =
+            parts.join(
+              "  /  "
+            );
+
+        }
       );
 
     }
@@ -553,13 +758,33 @@ function updateSelection() {
         ".media-item.selected"
       )
     ).map(
-      item =>
-        item.dataset.filename
+      item => {
+
+        const filename =
+          item.dataset.filename;
+
+        const note =
+          item.querySelector(
+            ".image-note-input"
+          );
+
+        const noteText =
+          note
+            ? note.value.trim()
+            : "";
+
+        return {
+          filename,
+          note: noteText
+        };
+
+      }
     );
 
 
   const selectedCount =
     selectedItems.length;
+
 
   const totalCount =
     allImages.length;
@@ -569,26 +794,74 @@ function updateSelection() {
     `${selectedCount} / ${totalCount} SELECTED`;
 
 
-  selectionCount.textContent =
-    countText;
+  if (selectionCount) {
 
-  mobileSelectionCount.textContent =
-    countText;
+    selectionCount.textContent =
+      countText;
 
-
-  selectedImagesInput.value =
-    selectedItems.join("\n");
+  }
 
 
-  selectionCountField.value =
-    selectedCount;
+  if (mobileSelectionCount) {
 
-  totalImagesField.value =
-    totalCount;
+    mobileSelectionCount.textContent =
+      countText;
+
+  }
 
 
-  submitButton.disabled =
-    selectedCount === 0;
+  /* -------------------------------------------------------
+     FORMAT SELECTED IMAGES FOR FORMSPREE
+  ------------------------------------------------------- */
+
+  const submissionText =
+    selectedItems
+      .map(
+        item => {
+
+          if (item.note) {
+
+            return `${item.filename}\nNOTE: ${item.note}`;
+
+          }
+
+          return item.filename;
+
+        }
+      )
+      .join("\n\n");
+
+
+  if (selectedImagesInput) {
+
+    selectedImagesInput.value =
+      submissionText;
+
+  }
+
+
+  if (selectionCountField) {
+
+    selectionCountField.value =
+      selectedCount;
+
+  }
+
+
+  if (totalImagesField) {
+
+    totalImagesField.value =
+      totalCount;
+
+  }
+
+
+  if (submitButton) {
+
+    submitButton.disabled =
+      selectedCount === 0;
+
+  }
 
 }
 
@@ -597,15 +870,21 @@ function updateSelection() {
    CLEAR SELECTION
 ========================================================= */
 
-clearSelectionButton.addEventListener(
-  "click",
-  () => {
+if (
+  clearSelectionButton
+) {
 
-    document
-      .querySelectorAll(
-        ".media-item.selected"
-      )
-      .forEach(
+  clearSelectionButton.addEventListener(
+    "click",
+    () => {
+
+      const selected =
+        document.querySelectorAll(
+          ".media-item.selected"
+        );
+
+
+      selected.forEach(
         item => {
 
           item.classList.remove(
@@ -632,165 +911,488 @@ clearSelectionButton.addEventListener(
       );
 
 
-    updateSelection();
+      updateSelection();
 
-  }
-);
+    }
+  );
+
+}
 
 
 /* =========================================================
    MOBILE FOOTER
 ========================================================= */
 
-mobileFooterToggle.addEventListener(
-  "click",
-  () => {
+if (
+  mobileFooterToggle &&
+  selectionFooter
+) {
 
-    const isOpen =
-      selectionFooter.classList.toggle(
-        "mobile-open"
+  mobileFooterToggle.addEventListener(
+    "click",
+    () => {
+
+      const isOpen =
+        selectionFooter.classList.toggle(
+          "mobile-open"
+        );
+
+
+      mobileFooterToggle.setAttribute(
+        "aria-expanded",
+        isOpen
+          ? "true"
+          : "false"
       );
 
+    }
+  );
 
-    mobileFooterToggle.setAttribute(
-      "aria-expanded",
-      isOpen
-        ? "true"
-        : "false"
-    );
-
-  }
-);
+}
 
 
 /* =========================================================
-   FORMSPREE
+   LOAD VIMEO DATA
 ========================================================= */
 
-selectionForm.addEventListener(
-  "submit",
-  async event => {
+async function loadVimeo() {
 
-    event.preventDefault();
+  if (!vimeoSection || !vimeoGrid) {
+    return;
+  }
 
+  try {
 
-    if (
-      selectedItems.length === 0
-    ) {
-
-      alert(
-        "Please select at least one image."
+    const response =
+      await fetch(
+        "vimeo.json",
+        {
+          cache:
+            "no-cache"
+        }
       );
 
-      return;
+
+    if (!response.ok) {
+
+      throw new Error(
+        "Could not load vimeo.json"
+      );
 
     }
 
 
-    const originalButtonText =
-      submitButton.textContent;
+    const data =
+      await response.json();
 
 
-    submitButton.disabled =
-      true;
+    if (!Array.isArray(data)) {
 
-    submitButton.textContent =
-      "SUBMITTING…";
+      throw new Error(
+        "vimeo.json is not an array."
+      );
 
-
-    try {
-
-      const formData =
-        new FormData(
-          selectionForm
-        );
+    }
 
 
-      const response =
-        await fetch(
-          selectionForm.action,
-          {
-            method:
-              "POST",
-
-            body:
-              formData,
-
-            headers: {
-              Accept:
-                "application/json"
-            }
-          }
-        );
+    buildVimeo(data);
 
 
-      if (!response.ok) {
+  } catch (error) {
 
-        throw new Error(
-          `Formspree returned ${response.status}`
-        );
+    console.error(error);
+
+    vimeoSection.style.display =
+      "none";
+
+  }
+
+}
+
+
+/* =========================================================
+   BUILD VIMEO
+========================================================= */
+
+function buildVimeo(videos) {
+
+  vimeoGrid.innerHTML =
+    "";
+
+
+  if (
+    videos.length === 0
+  ) {
+
+    vimeoSection.style.display =
+      "none";
+
+    return;
+
+  }
+
+
+  videos.forEach(
+    video => {
+
+      if (
+        !video ||
+        !video.videoId ||
+        !video.reviewUrl
+      ) {
+
+        return;
 
       }
 
 
-      selectionForm.style.display =
-        "none";
+      /* ---------------------------------------------------
+         ITEM
+      --------------------------------------------------- */
 
-
-      const summary =
-        document.querySelector(
-          ".selection-summary"
+      const item =
+        document.createElement(
+          "article"
         );
 
+      item.className =
+        "vimeo-item";
 
-      if (summary) {
 
-        summary.style.display =
-          "none";
+      /* ---------------------------------------------------
+         REVIEW LINK WRAPPER
+         
+         The entire thumbnail is clickable.
+      --------------------------------------------------- */
+
+      const thumbnailLink =
+        document.createElement(
+          "a"
+        );
+
+      thumbnailLink.className =
+        "vimeo-thumbnail-link";
+
+      thumbnailLink.href =
+        video.reviewUrl;
+
+      thumbnailLink.target =
+        "_blank";
+
+      thumbnailLink.rel =
+        "noopener noreferrer";
+
+      thumbnailLink.setAttribute(
+        "aria-label",
+        `Open review for ${
+          video.title ||
+          "video"
+        }`
+      );
+
+
+      /* ---------------------------------------------------
+         THUMBNAIL
+      --------------------------------------------------- */
+
+      const thumbnail =
+        document.createElement(
+          "div"
+        );
+
+      thumbnail.className =
+        "vimeo-thumbnail";
+
+
+      const image =
+        document.createElement(
+          "img"
+        );
+
+      image.src =
+        `https://vumbnail.com/${encodeURIComponent(
+          video.videoId
+        )}.jpg`;
+
+      image.alt =
+        video.title ||
+        "Vimeo review";
+
+      image.loading =
+        "lazy";
+
+      image.decoding =
+        "async";
+
+
+      thumbnail.appendChild(
+        image
+      );
+
+      thumbnailLink.appendChild(
+        thumbnail
+      );
+
+
+      /* ---------------------------------------------------
+         INFO
+      --------------------------------------------------- */
+
+      const info =
+        document.createElement(
+          "div"
+        );
+
+      info.className =
+        "vimeo-info";
+
+
+      const title =
+        document.createElement(
+          "div"
+        );
+
+      title.className =
+        "vimeo-title";
+
+      title.textContent =
+        video.title ||
+        "VIDEO REVIEW";
+
+
+      info.appendChild(
+        title
+      );
+
+
+      const reviewLink =
+        document.createElement(
+          "a"
+        );
+
+      reviewLink.className =
+        "vimeo-review-link";
+
+      reviewLink.href =
+        video.reviewUrl;
+
+      reviewLink.target =
+        "_blank";
+
+      reviewLink.rel =
+        "noopener noreferrer";
+
+      reviewLink.textContent =
+        "OPEN REVIEW";
+
+
+      info.appendChild(
+        reviewLink
+      );
+
+
+      /* ---------------------------------------------------
+         ASSEMBLE
+      --------------------------------------------------- */
+
+      item.appendChild(
+        thumbnailLink
+      );
+
+      item.appendChild(
+        info
+      );
+
+      vimeoGrid.appendChild(
+        item
+      );
+
+    }
+  );
+
+}
+
+
+/* =========================================================
+   FORMSPREE SUBMISSION
+========================================================= */
+
+if (selectionForm) {
+
+  selectionForm.addEventListener(
+    "submit",
+    async event => {
+
+      event.preventDefault();
+
+
+      updateSelection();
+
+
+      if (
+        selectedItems.length === 0
+      ) {
+
+        alert(
+          "Please select at least one image."
+        );
+
+        return;
 
       }
 
 
-      mobileFooterToggle.style.display =
-        "none";
-
-
-      submissionConfirmation.hidden =
-        false;
-
-
-      selectionFooter.classList.add(
-        "submission-complete"
-      );
-
-      selectionFooter.classList.remove(
-        "mobile-open"
-      );
-
-
-    } catch (error) {
-
-      console.error(
-        "Formspree error:",
-        error
-      );
+      const originalButtonText =
+        submitButton.textContent;
 
 
       submitButton.disabled =
-        false;
+        true;
 
       submitButton.textContent =
-        originalButtonText;
+        "SUBMITTING…";
 
 
-      alert(
-        "There was a problem submitting your selection. Please try again."
-      );
+      try {
+
+        const formData =
+          new FormData(
+            selectionForm
+          );
+
+
+        const response =
+          await fetch(
+            selectionForm.action,
+            {
+              method:
+                "POST",
+
+              body:
+                formData,
+
+              headers: {
+                Accept:
+                  "application/json"
+              }
+            }
+          );
+
+
+        if (!response.ok) {
+
+          throw new Error(
+            "Formspree submission failed."
+          );
+
+        }
+
+
+        /* -------------------------------------------------
+           SUCCESS
+        -------------------------------------------------- */
+
+        selectionForm.style.display =
+          "none";
+
+
+        const summary =
+          document.querySelector(
+            ".selection-summary"
+          );
+
+
+        if (summary) {
+
+          summary.style.display =
+            "none";
+
+        }
+
+
+        if (
+          mobileFooterToggle
+        ) {
+
+          mobileFooterToggle.style.display =
+            "none";
+
+        }
+
+
+        /*
+          Explicitly show confirmation
+          ONLY after successful submission.
+        */
+
+        if (
+          submissionConfirmation
+        ) {
+
+          submissionConfirmation.hidden =
+            false;
+
+          submissionConfirmation.style.display =
+            "flex";
+
+        }
+
+
+        if (
+          selectionFooter
+        ) {
+
+          selectionFooter.classList.remove(
+            "mobile-open"
+          );
+
+        }
+
+
+      } catch (error) {
+
+        console.error(error);
+
+
+        submitButton.disabled =
+          false;
+
+        submitButton.textContent =
+          originalButtonText;
+
+
+        alert(
+          "There was a problem submitting your selection. Please try again."
+        );
+
+      }
 
     }
+  );
 
-  }
-);
+}
+
+
+/* =========================================================
+   INITIAL STATE
+========================================================= */
+
+/*
+  Make absolutely certain the confirmation
+  is hidden when the page first loads.
+*/
+
+if (
+  submissionConfirmation
+) {
+
+  submissionConfirmation.hidden =
+    true;
+
+  submissionConfirmation.style.display =
+    "none";
+
+}
 
 
 /* =========================================================
@@ -798,3 +1400,5 @@ selectionForm.addEventListener(
 ========================================================= */
 
 loadGallery();
+
+loadVimeo();
