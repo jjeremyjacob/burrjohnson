@@ -1,24 +1,21 @@
 <!DOCTYPE html>
-
 <html lang="en">
 
 <head>
 
   <meta charset="UTF-8">
 
-<meta
-name="viewport"
-content="width=device-width, initial-scale=1.0"
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
 
->
+  <title>Client Image Gallery</title>
 
-  <title>TRISHA BROWN DANCE COMPANY</title>
-
-<meta
-name="description"
-content="Private client image gallery."
-
->
+  <meta
+    name="description"
+    content="Private client image gallery."
+  >
 
   <link
     rel="stylesheet"
@@ -27,49 +24,76 @@ content="Private client image gallery."
 
 </head>
 
+
 <body>
 
-  <!-- =========================================================
+
+  <!-- =======================================================
        HEADER
-  ========================================================== -->
+  ======================================================== -->
 
   <header class="site-header">
 
+    <div class="header-left">
+      CLIENT GALLERY
+    </div>
 
-<div class="header-left">
-  TRISHA BROWN DANCE COMPANY<br>
-  BURR JOHNSON
-</div>
+    <div class="header-center">
+      A DOLL'S HOUSE PICTURES
+    </div>
 
-<div class="header-center">
-  A DOLL'S HOUSE PICTURES
-</div>
-
-<div class="header-right">
-  PHOTOGRAPHS BY JEREMY JACOB<br>
-  AUGUST 27TH, 2026
-</div>
-
+    <div class="header-right">
+      PRIVATE SELECTION
+    </div>
 
   </header>
 
-  <!-- =========================================================
+
+
+  <!-- =======================================================
+       VIMEO REVIEW SECTION
+
+       Vimeo videos are automatically loaded from:
+
+       vimeo.json
+  ======================================================== -->
+
+  <section
+    class="vimeo-section"
+    id="vimeoSection"
+  >
+
+    <div class="section-label">
+      VIDEO REVIEWS
+    </div>
+
+    <div
+      class="vimeo-grid"
+      id="vimeoGrid"
+    ></div>
+
+  </section>
+
+
+
+  <!-- =======================================================
        GALLERY
 
-       JavaScript automatically creates all images from
-       gallery-data.json.
+       Images are automatically loaded from:
 
-       DO NOT ADD IMAGE HTML HERE.
-  ========================================================== -->
+       images.json
+  ======================================================== -->
 
   <main
     class="gallery"
     id="gallery"
   ></main>
 
-  <!-- =========================================================
+
+
+  <!-- =======================================================
        FIXED SELECTION FOOTER
-  ========================================================== -->
+  ======================================================== -->
 
   <footer
     class="selection-footer"
@@ -77,205 +101,240 @@ content="Private client image gallery."
   >
 
 
-<!-- =======================================================
-     SELECTION SUMMARY
-======================================================== -->
+    <!-- =====================================================
+         SELECTION SUMMARY
+    ====================================================== -->
 
-<div class="selection-summary">
+    <div class="selection-summary">
 
-  <span
-    class="selection-count"
-    id="selectionCount"
-  >
-    0 / 0 SELECTED
-  </span>
+      <span
+        class="selection-count"
+        id="selectionCount"
+      >
+        0 / 0 SELECTED
+      </span>
 
-  <button
-    class="clear-selection"
-    id="clearSelection"
-    type="button"
-  >
-    CLEAR
-  </button>
+      <button
+        class="clear-selection"
+        id="clearSelection"
+        type="button"
+      >
+        CLEAR
+      </button>
 
-</div>
-
-
-
-<!-- =======================================================
-     CLIENT FORM
-======================================================== -->
-
-<form
-  class="selection-form"
-  id="selectionForm"
-  action="https://formspree.io/f/YOUR_FORMSPREE_ID"
-  method="POST"
->
+    </div>
 
 
-  <!-- NAME -->
 
-  <div class="form-field">
+    <!-- =====================================================
+         CLIENT FORM
+    ====================================================== -->
 
-    <label for="clientName">
-      NAME
-    </label>
-
-    <input
-      id="clientName"
-      name="name"
-      type="text"
-      autocomplete="name"
-      required
+    <form
+      class="selection-form"
+      id="selectionForm"
+      action="https://formspree.io/f/YOUR_FORMSPREE_ID"
+      method="POST"
     >
 
-  </div>
+
+      <!-- ===================================================
+           NAME
+      ==================================================== -->
+
+      <div class="form-field">
+
+        <label for="clientName">
+          NAME
+        </label>
+
+        <input
+          id="clientName"
+          name="name"
+          type="text"
+          autocomplete="name"
+          required
+        >
+
+      </div>
 
 
 
-  <!-- EMAIL -->
+      <!-- ===================================================
+           EMAIL
+      ==================================================== -->
 
-  <div class="form-field">
+      <div class="form-field">
 
-    <label for="clientEmail">
-      EMAIL
-    </label>
+        <label for="clientEmail">
+          EMAIL
+        </label>
 
-    <input
-      id="clientEmail"
-      name="email"
-      type="email"
-      autocomplete="email"
-      required
+        <input
+          id="clientEmail"
+          name="email"
+          type="email"
+          autocomplete="email"
+          required
+        >
+
+      </div>
+
+
+
+      <!-- ===================================================
+           GENERAL NOTES
+      ==================================================== -->
+
+      <div class="form-field notes-field">
+
+        <label for="clientNotes">
+          GENERAL NOTES
+        </label>
+
+        <input
+          id="clientNotes"
+          name="notes"
+          type="text"
+          placeholder="Optional"
+        >
+
+      </div>
+
+
+
+      <!-- ===================================================
+           SELECTED IMAGES
+      ==================================================== -->
+
+      <input
+        type="hidden"
+        name="selected_images"
+        id="selectedImages"
+      >
+
+
+
+      <!-- ===================================================
+           IMAGE NOTES
+
+           gallery.js generates this automatically.
+      ==================================================== -->
+
+      <input
+        type="hidden"
+        name="image_notes"
+        id="imageNotes"
+      >
+
+
+
+      <!-- ===================================================
+           SELECTION COUNT
+      ==================================================== -->
+
+      <input
+        type="hidden"
+        name="selection_count"
+        id="selectionCountField"
+      >
+
+
+
+      <!-- ===================================================
+           TOTAL IMAGE COUNT
+      ==================================================== -->
+
+      <input
+        type="hidden"
+        name="total_images"
+        id="totalImagesField"
+      >
+
+
+
+      <!-- ===================================================
+           EMAIL SUBJECT
+      ==================================================== -->
+
+      <input
+        type="hidden"
+        name="_subject"
+        value="Client Gallery Selection"
+      >
+
+
+
+      <!-- ===================================================
+           SUBMIT
+      ==================================================== -->
+
+      <button
+        class="submit-button"
+        id="submitButton"
+        type="submit"
+        disabled
+      >
+        SUBMIT SELECTION
+      </button>
+
+
+    </form>
+
+
+
+    <!-- =====================================================
+         MOBILE FOOTER TOGGLE
+    ====================================================== -->
+
+    <button
+      class="mobile-footer-toggle"
+      id="mobileFooterToggle"
+      type="button"
+      aria-expanded="false"
+      aria-controls="selectionForm"
     >
 
-  </div>
+      <span id="mobileSelectionCount">
+        0 / 0 SELECTED
+      </span>
+
+      <span>
+        SUBMIT
+      </span>
+
+    </button>
 
 
 
-  <!-- NOTES -->
+    <!-- =====================================================
+         SUBMISSION CONFIRMATION
+    ====================================================== -->
 
-  <div class="form-field notes-field">
-
-    <label for="clientNotes">
-      NOTES
-    </label>
-
-    <input
-      id="clientNotes"
-      name="notes"
-      type="text"
-      placeholder="Optional"
+    <div
+      class="submission-confirmation"
+      id="submissionConfirmation"
+      hidden
     >
 
-  </div>
+      <div class="confirmation-title">
+        SELECTION RECEIVED
+      </div>
 
+      <div class="confirmation-text">
+        Thank you. Your selection has been submitted.
+      </div>
 
-
-  <!-- =====================================================
-       AUTOMATIC SELECTION DATA
-
-       gallery.js fills these fields before submission.
-  ====================================================== -->
-
-  <input
-    type="hidden"
-    name="selected_images"
-    id="selectedImages"
-  >
-
-
-  <input
-    type="hidden"
-    name="selection_count"
-    id="selectionCountField"
-  >
-
-
-  <input
-    type="hidden"
-    name="total_images"
-    id="totalImagesField"
-  >
-
-
-  <!-- EMAIL SUBJECT -->
-
-  <input
-    type="hidden"
-    name="_subject"
-    value="Client Gallery Selection"
-  >
-
-
-
-  <!-- SUBMIT -->
-
-  <button
-    class="submit-button"
-    id="submitButton"
-    type="submit"
-    disabled
-  >
-    SUBMIT SELECTION
-  </button>
-
-
-</form>
-
-
-
-<!-- =======================================================
-     MOBILE FOOTER
-======================================================== -->
-
-<button
-  class="mobile-footer-toggle"
-  id="mobileFooterToggle"
-  type="button"
-  aria-expanded="false"
-  aria-controls="selectionForm"
->
-
-  <span id="mobileSelectionCount">
-    0 / 0 SELECTED
-  </span>
-
-  <span>
-    SUBMIT
-  </span>
-
-</button>
-
-
-
-<!-- =======================================================
-     SUBMISSION CONFIRMATION
-======================================================== -->
-
-<div
-  class="submission-confirmation"
-  id="submissionConfirmation"
-  hidden
->
-
-  <div class="confirmation-title">
-    SELECTION RECEIVED
-  </div>
-
-  <div class="confirmation-text">
-    Thank you. Your selection has been submitted.
-  </div>
-
-</div>
+    </div>
 
 
   </footer>
 
-  <!-- =========================================================
+
+
+  <!-- =======================================================
        JAVASCRIPT
-  ========================================================== -->
+  ======================================================== -->
 
   <script src="js/gallery.js"></script>
 
