@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+  <meta charset="UTF-8">
+
+<meta
+name="viewport"
+content="width=device-width, initial-scale=1.0"
+
+>
+
+  <title>TRISHA BROWN DANCE COMPANY</title>
+
+<meta
+name="description"
+content="Private client image gallery."
+
+>
+
+  <link
+    rel="stylesheet"
+    href="css/style.css"
+  >
+
+</head>
+
+<body>
+
+  <!-- =========================================================
+       HEADER
+  ========================================================== -->
+
+  <header class="site-header">
+
+
+<div class="header-left">
+  TRISHA BROWN DANCE COMPANY<br>
+  BURR JOHNSON
+</div>
+
+<div class="header-center">
+  A DOLL'S HOUSE PICTURES
+</div>
+
+<div class="header-right">
+  PHOTOGRAPHS BY JEREMY JACOB<br>
+  AUGUST 27TH, 2026
+</div>
+
+
+  </header>
+
+  <!-- =========================================================
+       GALLERY
+
+       JavaScript automatically creates all images from
+       gallery-data.json.
+
+       DO NOT ADD IMAGE HTML HERE.
+  ========================================================== -->
+
+  <main
+    class="gallery"
+    id="gallery"
+  ></main>
+
+  <!-- =========================================================
+       FIXED SELECTION FOOTER
+  ========================================================== -->
+
+  <footer
+    class="selection-footer"
+    id="selectionFooter"
+  >
+
+
+<!-- =======================================================
+     SELECTION SUMMARY
+======================================================== -->
+
+<div class="selection-summary">
+
+  <span
+    class="selection-count"
+    id="selectionCount"
+  >
+    0 / 0 SELECTED
+  </span>
+
+  <button
+    class="clear-selection"
+    id="clearSelection"
+    type="button"
+  >
+    CLEAR
+  </button>
+
+</div>
+
+
+
+<!-- =======================================================
+     CLIENT FORM
+======================================================== -->
+
+<form
+  class="selection-form"
+  id="selectionForm"
+  action="https://formspree.io/f/YOUR_FORMSPREE_ID"
+  method="POST"
+>
+
+
+  <!-- NAME -->
+
+  <div class="form-field">
+
+    <label for="clientName">
+      NAME
+    </label>
+
+    <input
+      id="clientName"
+      name="name"
+      type="text"
+      autocomplete="name"
+      required
+    >
+
+  </div>
+
+
+
+  <!-- EMAIL -->
+
+  <div class="form-field">
+
+    <label for="clientEmail">
+      EMAIL
+    </label>
+
+    <input
+      id="clientEmail"
+      name="email"
+      type="email"
+      autocomplete="email"
+      required
+    >
+
+  </div>
+
+
+
+  <!-- NOTES -->
+
+  <div class="form-field notes-field">
+
+    <label for="clientNotes">
+      NOTES
+    </label>
+
+    <input
+      id="clientNotes"
+      name="notes"
+      type="text"
+      placeholder="Optional"
+    >
+
+  </div>
+
+
+
+  <!-- =====================================================
+       AUTOMATIC SELECTION DATA
+
+       gallery.js fills these fields before submission.
+  ====================================================== -->
+
+  <input
+    type="hidden"
+    name="selected_images"
+    id="selectedImages"
+  >
+
+
+  <input
+    type="hidden"
+    name="selection_count"
+    id="selectionCountField"
+  >
+
+
+  <input
+    type="hidden"
+    name="total_images"
+    id="totalImagesField"
+  >
+
+
+  <!-- EMAIL SUBJECT -->
+
+  <input
+    type="hidden"
+    name="_subject"
+    value="Client Gallery Selection"
+  >
+
+
+
+  <!-- SUBMIT -->
+
+  <button
+    class="submit-button"
+    id="submitButton"
+    type="submit"
+    disabled
+  >
+    SUBMIT SELECTION
+  </button>
+
+
+</form>
+
+
+
+<!-- =======================================================
+     MOBILE FOOTER
+======================================================== -->
+
+<button
+  class="mobile-footer-toggle"
+  id="mobileFooterToggle"
+  type="button"
+  aria-expanded="false"
+  aria-controls="selectionForm"
+>
+
+  <span id="mobileSelectionCount">
+    0 / 0 SELECTED
+  </span>
+
+  <span>
+    SUBMIT
+  </span>
+
+</button>
+
+
+
+<!-- =======================================================
+     SUBMISSION CONFIRMATION
+======================================================== -->
+
+<div
+  class="submission-confirmation"
+  id="submissionConfirmation"
+  hidden
+>
+
+  <div class="confirmation-title">
+    SELECTION RECEIVED
+  </div>
+
+  <div class="confirmation-text">
+    Thank you. Your selection has been submitted.
+  </div>
+
+</div>
+
+
+  </footer>
+
+  <!-- =========================================================
+       JAVASCRIPT
+  ========================================================== -->
+
+  <script src="js/gallery.js"></script>
+
+</body>
+
+</html>
