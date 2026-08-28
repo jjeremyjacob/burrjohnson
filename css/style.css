@@ -93,7 +93,7 @@ textarea {
     100%;
 
   min-height:
-    54px;
+    74px;
 
   display:
     grid;
@@ -502,9 +502,9 @@ textarea {
 
   display: block;
 
-  width: 100%;
+  width: 85%;
 
-  height: 100%;
+  height: 85%;
 
   object-fit: contain;
 
@@ -672,20 +672,28 @@ textarea {
 
 @media (max-width: 700px) {
 
-  .media-select {
+.gallery {
+padding:
+12px
+10px
+70px;
 
-    height:
-      calc(100vh - 100px);
+gap: 40px;
 
-  }
+}
 
-  .media-item.selected
-  .media-select::after {
 
-    border-width:
-      2px;
+.media-select {
+height: auto;
+min-height: 0;
+}
 
-  }
+.media-select img {
+width: 100%;
+height: auto;
+max-height: none;
+object-fit: contain;
+}
 
 }
 
@@ -1349,7 +1357,7 @@ textarea {
   .site-header {
 
     min-height:
-      48px;
+      60px;
 
     grid-template-columns:
       1fr
@@ -1425,24 +1433,23 @@ textarea {
   /* -------------------------------------------------------
      GALLERY
   ------------------------------------------------------- */
+.gallery {
+width: 100%;
 
-  .gallery {
+display: flex;
+flex-direction: column;
 
-    padding:
-      12px
-      10px
-      70px;
+gap: 20px;
 
-  }
+padding:
+24px
+18px
+200px;
 
-  .media-select img {
+background:
+var(--paper);
+}
 
-    max-height:
-      calc(
-        100vh - 100px
-      );
-
-  }
 
 
   /* -------------------------------------------------------
